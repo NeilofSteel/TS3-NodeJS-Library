@@ -293,16 +293,17 @@ export class TeamSpeak extends EventEmitter {
    * Gets called when a client moves to a different channel
    * @param event the raw teamspeak event
    */
-  private evclientmoved(event: QueryResponse) {
+  evclientmoved(event) {
     Promise.all([
-      this.getClientByID(event.clid!),
-      this.getChannelByID(event.ctid!)
-    ]).then(([client, channel]) => {
+      this.getClientByID(event.clid),
+      this.getChannelByID(event.ctid),
+      this.getClientByID(event.invokerid)
+    ]).then(([client, channel, invoker]) => {
       if (!client) throw new EventError(`could not fetch client with id ${event.clid}`, "clientmoved")
       if (!channel) throw new EventError(`could not fetch channel with id ${event.ctid}`, "clientmoved")
       if (this.ignoreQueryClient(client.type)) return
-      this.emit("clientmoved", { client, channel, reasonid: event.reasonid })
-    }).catch(e => this.emit("error", e))
+      this.emit("clientmoved", { client, channel, invoker, moved: (typeof event.invokerid !== 'undefined'), reasonid: event.reasonid })
+    }).catch(e => this.emit("error", e));
   }
 
   /**
